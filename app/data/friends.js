@@ -1,6 +1,6 @@
 //array holding all the "friends" that have taken the survey
 
-friends = [
+friendList = [
     {
     "name": "Ahmed",
     "photo": "http://www.freedigitalphotos.net/images/previews/casual-guy-posing-hands-on-his-waist-100115965.jpg",
@@ -611,4 +611,4 @@ friends = [
     }
 ];
 
-module.exports = friends;
+module.exports = friendList;
