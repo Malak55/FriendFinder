@@ -1,5 +1,5 @@
-var routes = require("express").Router();
-var path = require("path");
+var routes = require('express').router();
+var path = require('path');
 
 // ************************************************************
 // Define basic routes
