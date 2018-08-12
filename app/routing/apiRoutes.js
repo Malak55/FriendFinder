@@ -1,44 +1,67 @@
-//a POST routes /api/friends - this handles incoming survey results. will also used to handle the compatibility logic
-//Load Data
-var friendList = require('./data/friends.js');
+var friendsData = require("../data/friends");
 
-module.exports = function(app){
-  //a GET route that displays JSON of all possible friends
-  app.get('./data/friends', function(req,res){
-    res.json(friendList);
-  });
+// ************************************************************
+// Define basic routes
+// ************************************************************
 
-  app.post('./data/friends', function(req,res){
-    //grabs the new friend's scores to compare with friends in friendList array
-    var newFriendScores = req.body.scores;
-    var scoresArray = [];
-    var friendCount = 0;
-    var bestMatch = 0;
+module.exports = function(app) {
 
-    //runs through all current friends in list
-    for(var i=0; i<friendList.length; i++){
-      var scoresDiff = 0;
-      //run through scores to compare friends
-      for(var j=0; j<newFriendScores.length; j++){
-        scoresDiff += (Math.abs(parseInt(friendList[i].scores[j]) - parseInt(newFriendScores[j])));
-      }
+    // ********************************************************
+    // Function to determine closest mtch
+    // ********************************************************
+    function verComp(scores) {
+        var match = {};
+        var matchIndex = 0;
+        var sum = 0;
 
-      //push results into scoresArray
-      scoresArray.push(scoresDiff);
-    }
+        for (var i=0; i<friendsData.length; i++) {
+            var tempSum = 0;
 
-    //after all friends are compared, find best match
-    for(var i=0; i<scoresArray.length; i++){
-      if(scoresArray[i] <= scoresArray[bestMatch]){
-        bestMatch = i;
-      }
-    }
+            for (var j=0; j < friendsData[i].scores.length; j++) {
+                var friendScore = parseInt(scores[j]);
+                var matchScore = parseInt(friendsData[i].scores[j]);
+                if (matchScore > friendScore) {
+                    tempSum += (matchScore - friendScore);
+                } else {
+                    tempSum += (friendScore - matchScore);
+                }
+            } // end for (var j=0; j < friendsData[i].scores.length; j++)
 
-    //return bestMatch data
-    var bff = friendList[bestMatch];
-    res.json(bff);
+            if (tempSum == 0) {
+                matchIndex = i;
+                break;
+            }
 
-    //pushes new submission into the friendsList array
-    friendList.push(req.body);
-  });
-};
+            if (sum == 0 || sum > tempSum) {
+                sum = tempSum;
+                matchIndex = i;
+            }
+        } // end for (var i=0; i<friendsData.length; i++)
+
+        match.name = friendsData[matchIndex].name;
+        match.photo = friendsData[matchIndex].photo;
+        return match;
+    } // end function verComp(scores)
+
+    app.get("/api/friends", function(req, res) {
+        res.json(friendsData);
+    });
+
+
+    app.post("/api/friends", function(req, res) {
+        var userScoreArray = req.body.scores;
+
+        var bestMatch = verComp(userScoreArray);
+
+        var newFriend = {
+            name: req.body.name,
+            photo: req.body.photo,
+            scores: userScoreArray
+        }
+        friendsData.push(newFriend); 
+        res.send(bestMatch);
+        res.json(true); 
+        res.redirect("/survey"); 
+    }); // end app.post
+
+}; // end module.exports = function(app)
